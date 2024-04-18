@@ -61,51 +61,56 @@ const Game = () => {
                 }
             }
 
-            buildings.forEach(building => {
-                building.update();
-                building.target = null;
-                const validEnemies = enemies.filter(enemy => {
-                    const xDifference = enemy.center.x - building.center.x;
-                    const yDifference = enemy.center.y - building.center.y;
-                    const distance = Math.hypot(xDifference, yDifference);
-                    return distance < enemy.radius + building.radius;
-                });
-                building.target = validEnemies[0];
+            buildings.forEach((building) => {
+                building.update()
+                building.target = null
+                const validEnemies = enemies.filter((enemy) => {
+                    const xDifference = enemy.center.x - building.center.x
+                    const yDifference = enemy.center.y - building.center.y
+                    const distance = Math.hypot(xDifference, yDifference)
+                    return distance < enemy.radius + building.radius
+                })
+                building.target = validEnemies[0]
 
-                for (const projectile of building.projectiles) {
-                    projectile.update();
+                for (let i = building.projectiles.length - 1; i >= 0; i--) {
+                    const projectile = building.projectiles[i]
 
-                    const { enemy, position, radius } = projectile;
-                    const xDifference = enemy.center.x - position.x;
-                    const yDifference = enemy.center.y - position.y;
-                    const distance = Math.hypot(xDifference, yDifference);
+                    projectile.update()
 
-                    if (distance < enemy.radius + radius) {
-                        // Reduce enemy health
-                        enemy.health -= 20;
-                        if (enemy.health <= 0) {
-                            const enemyIndex = enemies.indexOf(enemy);
-                            if (enemyIndex !== -1) {
-                                enemies.splice(enemyIndex, 1);
-                                coins += 25;
-                                document.querySelector('#coins').innerHTML = coins;
+                    const xDifference = projectile.enemy.center.x - projectile.position.x
+                    const yDifference = projectile.enemy.center.y - projectile.position.y
+                    const distance = Math.hypot(xDifference, yDifference)
+
+                    // this is when a projectile hits an enemy
+                    if (distance < projectile.enemy.radius + projectile.radius) {
+                        // enemy health and enemy removal
+                        projectile.enemy.health -= 20
+                        if (projectile.enemy.health <= 0) {
+                            const enemyIndex = enemies.findIndex((enemy) => {
+                                return projectile.enemy === enemy
+                            })
+
+                            if (enemyIndex > -1) {
+                                enemies.splice(enemyIndex, 1)
+                                coins += 25
+                                document.querySelector('#coins').innerHTML = coins
                             }
                         }
 
-                        // Create explosion
-                        explosions.push(new Sprite({
-                            position: { x: position.x, y: position.y },
-                            imageSrc: myImageExplosion,
-                            frames: { max: 4 },
-                            offset: { x: 0, y: 0 },
-                            c: ctx
-                        }));
-
-                        // Remove projectile
-                        building.projectiles.splice(building.projectiles.indexOf(projectile), 1);
+                        console.log(projectile.enemy.health)
+                        explosions.push(
+                            new Sprite({
+                                position: { x: projectile.position.x, y: projectile.position.y },
+                                imageSrc: myImageExplosion,
+                                frames: { max: 4 },
+                                offset: { x: 0, y: 0 },
+                                c:ctx
+                            })
+                        )
+                        building.projectiles.splice(i, 1)
                     }
                 }
-            });
+            })
 
             console.log('buildings!',buildings)
         }
