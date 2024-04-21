@@ -1,4 +1,3 @@
-import React from 'react';
 import Enemy from "../classes/Enemy";
 import waypoints from "../mocks/waypoints";
 

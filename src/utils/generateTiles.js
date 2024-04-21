@@ -1,4 +1,3 @@
-import React from 'react';
 import placementTilesData from "../mocks/placementTilesData";
 import PlacementTile from "../classes/PlacementTile";
 

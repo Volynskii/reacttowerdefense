@@ -17,8 +17,6 @@ class Building extends Sprite {
       c:c,
     })
 
-    console.log('c!!',c)
-
     this.width = 64 * 2
     this.height = 64
     this.center = {
