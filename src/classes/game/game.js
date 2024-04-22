@@ -11,6 +11,35 @@ import EnemiesGenerator from "./EnemiesGenerator";
 import Sprite from "../Sprite";
 import myImageExplosion from "../../img/explosion.png";
 
+
+export class EventObserver {
+    constructor(callback) {
+        this.callback = callback;
+    }
+
+    update(event) {
+        this.callback(event);
+    }
+}
+
+export class EventSubject {
+    constructor() {
+        this.observers = [];
+    }
+
+    attach(observer) {
+        this.observers.push(observer);
+    }
+
+    detach(observer) {
+        this.observers = this.observers.filter(obs => obs !== observer);
+    }
+
+    notify(event) {
+        this.observers.forEach(observer => observer.update(event));
+    }
+}
+
 class Game {
     constructor() {
         this.heartsDisplayCount = 3;
@@ -31,12 +60,33 @@ class Game {
         this.animate = this.animate.bind(this);
         this.activeTile = null;
         this.explosions = [];
+        this.eventSubject = new EventSubject();
     }
 
+    // Метод для изменения количества монет
+    setCoins(newCoins) {
+        this.coins = this.coins + newCoins;
+        // Вызываем событие о изменении количества монет
+        this.triggerCoinsChangeEvent();
+    }
+
+    setHearts(newHearts) {
+        this.hearts = newHearts;
+        // Вызываем событие о изменении количества сердец
+        this.triggerHeartsChangeEvent();
+    }
+
+    // Метод для вызова события об изменении количества монет
+    triggerCoinsChangeEvent() {
+        this.eventSubject.notify(this.coins);
+    }
+
+
+
     initialize() {
-      this.initializeMap();
-      this.initializeEnemies();
-      this.initializeTiles();
+        this.initializeMap();
+        this.initializeEnemies();
+        this.initializeTiles();
     }
 
     initializeMap() {
@@ -52,9 +102,9 @@ class Game {
     }
 
     initializeEnemies() {
-        const enemiesGenerator = new EnemiesGenerator(this.ctx, Enemy, waypoints);
+        const enemiesGenerator = new EnemiesGenerator(this.ctx, waypoints);
 
-        this.enemies = enemiesGenerator.generate(this.enemyCount);
+        this.enemies = enemiesGenerator.generate(this.enemyCount, Enemy);
     }
 
     initializeTiles() {
@@ -69,28 +119,29 @@ class Game {
         };
     }
 
+
+
     handleEnemyLogic(animationId) {
 
-            if (this.enemies.length === 0) {
-                this.handleSpawnMoreEnemies(2)
-            }
+        if (this.enemies.length === 0) {
+            this.handleSpawnMoreEnemies(2)
+        }
 
-            for (let i = this.enemies.length - 1; i >= 0; i--) {
-                const enemy = this.enemies[i]
-                enemy.update()
-                if (enemy.position.x > this.canvas.width) {
-                   this.heartsDisplayCount--
-                    this.enemies.splice(i, 1)
-                    if (this.heartsDisplayCount <= 0) {
-                        cancelAnimationFrame(animationId)
-                        document.querySelector('#gameOver').style.display = 'flex'
-                    }
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies[i]
+            enemy.update()
+            if (enemy.position.x > this.canvas.width) {
+                this.heartsDisplayCount--
+                this.enemies.splice(i, 1)
+                if (this.heartsDisplayCount <= 0) {
+                    cancelAnimationFrame(animationId)
+                    document.querySelector('#gameOver').style.display = 'flex'
                 }
             }
+        }
     }
 
     handleTilesLogic() {
-
         this.placementTiles.forEach((tile) => {
             tile.update(this.mouse)
         })
@@ -98,9 +149,9 @@ class Game {
 
     handleSpawnMoreEnemies(count) {
         this.enemyCount+= count;
-        const enemiesGenerator = new EnemiesGenerator(this.ctx, Enemy, waypoints);
+        const enemiesGenerator = new EnemiesGenerator(this.ctx, waypoints);
 
-        this.enemies = enemiesGenerator.generate(this.enemyCount + count);
+        this.enemies = enemiesGenerator.generate(this.enemyCount + count, Enemy);
     }
 
     animate() {
@@ -162,7 +213,7 @@ class Game {
             const enemyIndex = this.enemies.findIndex((e) => e === enemy);
             if (enemyIndex > -1) {
                 this.enemies.splice(enemyIndex, 1);
-                this.coins += 25;
+                this.setCoins(25)
                 // document.querySelector('#coins').innerHTML = this.coins;
             }
         }
@@ -190,7 +241,7 @@ class Game {
     handleCanvasClick(event) {
 
         if (this.activeTile && !this.activeTile.isOccupied && this.coins - 50 >= 0) {
-            this.coins -= 50;
+            this.setCoins(-50)
             // document.querySelector('#coins').innerHTML = this.coins;
             this.buildings.push(
                 new Building({

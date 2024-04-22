@@ -1,12 +1,27 @@
-import React, { useEffect}  from 'react';
-import Game from "../classes/game/game";
+import React, {useEffect, useState} from 'react';
+import Game, {EventObserver} from "../classes/game/game";
+import Coins from "../components/coins";
 
 const GamePage = () => {
 
+
+    const [coins,setCoins] = useState(100);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     
     useEffect(() => {
         const game = new Game();
+        // Define a function to handle the game over event
+
+        function handleCoinsChangedEvent(coins) {
+
+            // Logic to handle coins changed event
+            console.log(`Coins changed: ${coins}`);
+            setCoins(coins)
+        }
+
+        const coinsChangedObserver = new EventObserver(handleCoinsChangedEvent);
+        game.eventSubject.attach(coinsChangedObserver);
+
         game.initialize();
         game.initGame();
     }, []);
@@ -56,7 +71,7 @@ const GamePage = () => {
                         alignItems: 'center'
                     }}
                 >
-                   {/*<Coins coinsDisplayCount={coinsDisplayCount}/>*/}
+                   <Coins coinsDisplayCount={coins}/>
                    {/* <Hearts heartsDisplayCount={heartsDisplayCount}/>*/}
                 </div>
             </div>
