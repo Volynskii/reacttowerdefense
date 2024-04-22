@@ -1,30 +1,39 @@
 import React, {useEffect, useState} from 'react';
-import Game, {EventObserver} from "../classes/game/game";
+import Game from "../classes/game/game";
 import Coins from "../components/coins";
+import { EventObserver } from "../classes/observer";
+import Hearts from "../components/hearts";
 
 const GamePage = () => {
 
 
+
     const [coins,setCoins] = useState(100);
+    const [hearts,setHearts] = useState(3);
+
+    function handleCoinsChangedEvent(coins) {
+        setCoins(coins);
+    }
+
+    function handleHeartsChangedEvent(hearts) {
+        setHearts(hearts);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     
     useEffect(() => {
-        const game = new Game();
-        // Define a function to handle the game over event
-
-        function handleCoinsChangedEvent(coins) {
-
-            // Logic to handle coins changed event
-            console.log(`Coins changed: ${coins}`);
-            setCoins(coins)
-        }
+        const game = new Game(coins, hearts);
 
         const coinsChangedObserver = new EventObserver(handleCoinsChangedEvent);
-        game.eventSubject.attach(coinsChangedObserver);
+        const heartsChangedObserver = new EventObserver(handleHeartsChangedEvent);
+
+        game.eventSubject.attach("coinsChanged", coinsChangedObserver);
+        game.eventSubject.attach("heartsChanged", heartsChangedObserver);
 
         game.initialize();
         game.initGame();
     }, []);
+
+
 
 
     return (
@@ -72,7 +81,7 @@ const GamePage = () => {
                     }}
                 >
                    <Coins coinsDisplayCount={coins}/>
-                   {/* <Hearts heartsDisplayCount={heartsDisplayCount}/>*/}
+                    <Hearts heartsDisplayCount={hearts}/>
                 </div>
             </div>
         </>

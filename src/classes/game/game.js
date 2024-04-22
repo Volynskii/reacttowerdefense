@@ -10,53 +10,22 @@ import Building from "../Building";
 import EnemiesGenerator from "./EnemiesGenerator";
 import Sprite from "../Sprite";
 import myImageExplosion from "../../img/explosion.png";
+import { EventSubject } from "../observer";
 
 
-export class EventObserver {
-    constructor(callback) {
-        this.callback = callback;
-    }
-
-    update(event) {
-        this.callback(event);
-    }
-}
-
-export class EventSubject {
-    constructor() {
-        this.observers = [];
-    }
-
-    attach(observer) {
-        this.observers.push(observer);
-    }
-
-    detach(observer) {
-        this.observers = this.observers.filter(obs => obs !== observer);
-    }
-
-    notify(event) {
-        this.observers.forEach(observer => observer.update(event));
-    }
-}
 
 class Game {
-    constructor() {
-        this.heartsDisplayCount = 3;
-        this.coins = 100;
+    constructor(coins,hearts) {
+        this.hearts = hearts;
+        this.coins = coins;
         this.enemyCount = 3;
         this.enemies = [];
         this.buildings = [];
-
         this.canvas = null;
         this.ctx = null;
         this.image = null;
-
         this.placementTiles = null;
-        this.mouse = {
-            x: undefined,
-            y: undefined
-        };
+        this.mouse = {x: undefined, y: undefined};
         this.animate = this.animate.bind(this);
         this.activeTile = null;
         this.explosions = [];
@@ -65,23 +34,25 @@ class Game {
 
     // Метод для изменения количества монет
     setCoins(newCoins) {
-        this.coins = this.coins + newCoins;
-        // Вызываем событие о изменении количества монет
+        this.coins += newCoins;
         this.triggerCoinsChangeEvent();
-    }
-
-    setHearts(newHearts) {
-        this.hearts = newHearts;
-        // Вызываем событие о изменении количества сердец
-        this.triggerHeartsChangeEvent();
     }
 
     // Метод для вызова события об изменении количества монет
     triggerCoinsChangeEvent() {
-        this.eventSubject.notify(this.coins);
+        this.eventSubject.notify("coinsChanged", this.coins);
     }
 
+    setHearts(newHearts) {
+        this.hearts += newHearts;
+        // Вызываем событие о изменении количества монет
+        this.triggerHeartsChangeEvent();
+    }
 
+    // Метод для вызова события об изменении количества монет
+    triggerHeartsChangeEvent() {
+        this.eventSubject.notify('heartsChanged', this.hearts);
+    }
 
     initialize() {
         this.initializeMap();
@@ -131,9 +102,10 @@ class Game {
             const enemy = this.enemies[i]
             enemy.update()
             if (enemy.position.x > this.canvas.width) {
-                this.heartsDisplayCount--
+                // this.hearts--
+                this.setHearts(-1)
                 this.enemies.splice(i, 1)
-                if (this.heartsDisplayCount <= 0) {
+                if (this.hearts <= 0) {
                     cancelAnimationFrame(animationId)
                     document.querySelector('#gameOver').style.display = 'flex'
                 }
